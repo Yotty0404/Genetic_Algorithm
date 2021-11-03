@@ -58,9 +58,9 @@ namespace Genetic_Algorithm
         {
             var score = 0;
 
-            for (int x = 0; x < 15; x++)
+            for (int x = 0; x < PIXEL_SIZE; x++)
             {
-                for (int y = 0; y < 15; y++)
+                for (int y = 0; y < PIXEL_SIZE; y++)
                 {
                     Color pixel = img.GetPixel(x, y);
                     Console.WriteLine(pixel.A.ToString()+pixel.R + pixel.G + pixel.B);
