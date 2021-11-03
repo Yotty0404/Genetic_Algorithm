@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "b2TtG4SADdc3PGK8rY46DGJ0pHDAZx+GalAIK/v24MlLBwx3hVNAA6l2OGdgh+tTKLLTvfGvetugaaNQ3PEG7w==",
+  "success": true,
+  "projectFilePath": "D:\\PG\\Genetic_Algorithm\\Genetic_Algorithm\\Genetic_Algorithm.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tyuke\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "C:\\Users\\tyuke\\.nuget\\packages\\microsoft.win32.systemevents\\5.0.0\\microsoft.win32.systemevents.5.0.0.nupkg.sha512",
+    "C:\\Users\\tyuke\\.nuget\\packages\\system.drawing.common\\5.0.2\\system.drawing.common.5.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
