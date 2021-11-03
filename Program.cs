@@ -2,42 +2,71 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Genetic_Algorithm
 {
     class Program
     {
+        const string PATH = @"D:\Image\";
+        const int PIXEL_SIZE = 32;
         const int PIXEL_COUNT_PER_SQUARE = 10;
+        static Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            //Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
+            Queue<int> que = new Queue<int>();
+            for (int i = 0; i < 256; i++) que.Enqueue(i);
+            var test1 = que.Dequeue();
+            var test2 = que.Dequeue();
 
-            Bitmap img = new Bitmap(300, 300);
+            var folderName = "g_1";
+            GetScore(new Bitmap(PATH + folderName + @"\" + test1 + ".bmp"));
+            //CreateRandomImg();
 
-            Random rnd = new Random();
-            for (int i = 0; i < img.Width; i += PIXEL_COUNT_PER_SQUARE)
+            //var bitmap = new Bitmap(@"D:\Image\test3.bmp");
+
+            //int w = bitmap.Width, h = bitmap.Height;
+        }
+
+        static void CreateRandomImg()
+        {
+            var folderName = "g_1";
+            Directory.CreateDirectory(PATH + folderName);
+
+            for (int i = 0; i < 256; i++)
             {
-                for (int j = 0; j < img.Height; j += PIXEL_COUNT_PER_SQUARE)
+                Bitmap img = new Bitmap(PIXEL_SIZE, PIXEL_SIZE);
+
+                Random rnd = new Random();
+                for (int x = 0; x < img.Width; x++)
                 {
-                    Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
-                    SetPixel(img, i, j, c);
+                    for (int y = 0; y < img.Height; y++)
+                    {
+                        Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+                        img.SetPixel(x, y, c);
+                    }
                 }
-                //img.SetPixel(rnd.Next(img.Width), rnd.Next(img.Height), c);
+
+                img.Save(PATH + folderName + @"\" + i + ".bmp", ImageFormat.Bmp);
             }
+        }
 
-            img.Save(@"D:\Image\test3.bmp", ImageFormat.Bmp);
+        static int GetScore(Bitmap img)
+        {
+            var score = 0;
 
-            var bitmap = new Bitmap(@"D:\Image\test3.bmp");
-
-            int w = bitmap.Width, h = bitmap.Height;
             for (int x = 0; x < 15; x++)
             {
                 for (int y = 0; y < 15; y++)
                 {
-                    Color pixel = bitmap.GetPixel(x, y);
-                    Console.WriteLine(pixel);
+                    Color pixel = img.GetPixel(x, y);
+                    Console.WriteLine(pixel.A.ToString()+pixel.R + pixel.G + pixel.B);
                 }
             }
+            return score;
         }
 
         static void SetPixel(Bitmap img, int x, int y, Color c)
