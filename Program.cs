@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Excel_CEIDE2000;
 
 namespace Genetic_Algorithm
 {
@@ -23,12 +24,19 @@ namespace Genetic_Algorithm
             var test2 = que.Dequeue();
 
             var folderName = "g_1";
-            GetScore(new Bitmap(PATH + folderName + @"\" + test1 + ".bmp"));
+            //GetScore(new Bitmap(PATH + folderName + @"\" + test1 + ".bmp"));
             //CreateRandomImg();
 
             //var bitmap = new Bitmap(@"D:\Image\test3.bmp");
 
             //int w = bitmap.Width, h = bitmap.Height;
+
+            var c = new CIEDE2000(50, 2.6772, -79.7751);
+            Console.WriteLine(c.DE00(50, 0, -82.7485));
+
+            Color color = Color.FromArgb(0,255,0);
+            var test = new CIELAB(color);
+            Console.WriteLine(test.L.ToString()+", "+test.A + ", " + test.B);
         }
 
         static void CreateRandomImg()
@@ -63,7 +71,7 @@ namespace Genetic_Algorithm
                 for (int y = 0; y < PIXEL_SIZE; y++)
                 {
                     Color pixel = img.GetPixel(x, y);
-                    Console.WriteLine(pixel.A.ToString()+pixel.R + pixel.G + pixel.B);
+                    Console.WriteLine(pixel.A.ToString() + pixel.R + pixel.G + pixel.B);
                 }
             }
             return score;
