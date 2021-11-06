@@ -31,12 +31,24 @@ namespace Genetic_Algorithm
 
             //int w = bitmap.Width, h = bitmap.Height;
 
-            var c = new CIEDE2000(50, 2.6772, -79.7751);
-            Console.WriteLine(c.DE00(50, 0, -82.7485));
 
-            Color color = Color.FromArgb(0,255,0);
+            var color = Color.FromArgb(255, 0, 0);
             var test = new CIELAB(color);
-            Console.WriteLine(test.L.ToString()+", "+test.A + ", " + test.B);
+            Console.WriteLine(test.L.ToString() + ", " + test.A + ", " + test.B);
+
+            var c = new CIEDE2000(test.L, test.A, test.B);
+            color = Color.FromArgb(85, 107, 47);
+            test = new CIELAB(color);
+            Console.WriteLine(test.L.ToString() + ", " + test.A + ", " + test.B);
+            Console.WriteLine(c.DE00(test.L, test.A, test.B));
+
+
+
+
+
+            color = Color.FromArgb(183, 197, 20);
+            var xyz = new CIEXYZ(color);
+            Console.WriteLine(xyz.X.ToString() + ", " + xyz.Y + ", " + xyz.Z);
         }
 
         static void CreateRandomImg()
