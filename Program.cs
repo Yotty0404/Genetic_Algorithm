@@ -12,43 +12,13 @@ namespace Genetic_Algorithm
     {
         const string PATH = @"D:\Image\";
         const int PIXEL_SIZE = 32;
-        const int PIXEL_COUNT_PER_SQUARE = 10;
-        static Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
+        static readonly Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
 
         static void Main(string[] args)
         {
-            //Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
-            Queue<int> que = new Queue<int>();
-            for (int i = 0; i < 256; i++) que.Enqueue(i);
-            var test1 = que.Dequeue();
-            var test2 = que.Dequeue();
-
-            var folderName = "g_1";
-            //GetScore(new Bitmap(PATH + folderName + @"\" + test1 + ".bmp"));
             //CreateRandomImg();
 
-            //var bitmap = new Bitmap(@"D:\Image\test3.bmp");
-
-            //int w = bitmap.Width, h = bitmap.Height;
-
-
-            var color = Color.FromArgb(255, 0, 0);
-            var test = new CIELAB(color);
-            Console.WriteLine(test.L.ToString() + ", " + test.A + ", " + test.B);
-
-            var c = new CIEDE2000(test.L, test.A, test.B);
-            color = Color.FromArgb(85, 107, 47);
-            test = new CIELAB(color);
-            Console.WriteLine(test.L.ToString() + ", " + test.A + ", " + test.B);
-            Console.WriteLine(c.DE00(test.L, test.A, test.B));
-
-
-
-
-
-            color = Color.FromArgb(183, 197, 20);
-            var xyz = new CIEXYZ(color);
-            Console.WriteLine(xyz.X.ToString() + ", " + xyz.Y + ", " + xyz.Z);
+            SelectWinners();
         }
 
         static void CreateRandomImg()
@@ -74,29 +44,75 @@ namespace Genetic_Algorithm
             }
         }
 
-        static int GetScore(Bitmap img)
+        static double GetScore(Bitmap img)
         {
-            var score = 0;
+            var score = 0.0;
 
             for (int x = 0; x < PIXEL_SIZE; x++)
             {
                 for (int y = 0; y < PIXEL_SIZE; y++)
                 {
-                    Color pixel = img.GetPixel(x, y);
-                    Console.WriteLine(pixel.A.ToString() + pixel.R + pixel.G + pixel.B);
+                    var lab1 = CIELAB.RGBToLab(seagull.GetPixel(x, y));
+                    var lab2 = CIELAB.RGBToLab(img.GetPixel(x, y));
+                    var ciede = new CIEDE2000(lab1.L, lab1.A, lab1.B);
+                    score += ciede.DE00(lab2.L, lab2.A, lab2.B);
                 }
             }
+
             return score;
         }
 
-        static void SetPixel(Bitmap img, int x, int y, Color c)
+        static void SelectWinners()
         {
-            for (int i = 0; i < PIXEL_COUNT_PER_SQUARE; i++)
+            //★
+            var isFirst = true;
+
+            Queue<int> que = new Queue<int>();
+            Queue<int> queWinners = new Queue<int>();
+            for (int i = 0; i < 256; i++) que.Enqueue(i);
+
+            var folderName = "g_1";
+
+            while (que.Count != 4)
             {
-                for (int j = 0; j < PIXEL_COUNT_PER_SQUARE; j++)
+                while (que.Any())
                 {
-                    img.SetPixel(x + i, y + j, c);
+                    var num1 = que.Dequeue();
+                    var num2 = que.Dequeue();
+
+                    var score1 = GetScore(new Bitmap(PATH + folderName + @"\" + num1 + ".bmp"));
+                    var score2 = GetScore(new Bitmap(PATH + folderName + @"\" + num2 + ".bmp"));
+
+                    //★
+                    if (isFirst)
+                    {
+                        Console.WriteLine(num1.ToString() + "," + score1.ToString());
+                        Console.WriteLine(num2.ToString() + "," + score2.ToString());
+                    }
+
+
+                    if (score1 <= score2)
+                    {
+                        queWinners.Enqueue(num1);
+                    }
+                    else
+                    {
+                        queWinners.Enqueue(num2);
+                    }
                 }
+
+                //★
+                isFirst = false;
+
+                que = queWinners;
+                queWinners = new Queue<int>();
+            }
+
+
+            //★
+            foreach (var item in que)
+            {
+                Console.WriteLine(item);
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿/*
- * Copyright (c) 2011 Hiroaki,Komori
- * http://komozo.blogspot.com/2011/04/rgbcielab.html
+ * Copyright (c) 2019 erncncbk
+ * https://stackoverflow.com/questions/58952430/rgb-xyz-and-xyz-lab-color-space-conversion-algorithm
  */
 
 using System;
@@ -8,15 +8,8 @@ using System.Drawing;
 
 namespace Genetic_Algorithm
 {
-    //
-    //　CIELAB構造体
-    //
     struct CIELAB
     {
-        private const double Xn = 0.950456;
-        private const double Yn = 1.0;
-        private const double Zn = 1.088754;
-
         private double l;
         private double a;
         private double b;
@@ -39,7 +32,6 @@ namespace Genetic_Algorithm
             set { b = value; }
         }
 
-
         public CIELAB(Double _L, Double _A, Double _B)
         {
             l = _L;
@@ -47,295 +39,90 @@ namespace Genetic_Algorithm
             b = _B;
         }
 
-        public CIELAB(Color rgb)
+
+        public static CIELAB RGBToLab(Color color)
         {
-            CIELAB _lab = CIELAB.Parse(rgb);
-            l = _lab.L;
-            a = _lab.A;
-            b = _lab.B;
-        }
+            float[] xyz = new float[3];
+            float[] lab = new float[3];
+            float[] rgb = new float[3];
 
-        public CIELAB(CIEXYZ xyz)
-        {
-            CIELAB _lab = CIELAB.Parse(xyz);
-            l = _lab.L;
-            a = _lab.A;
-            b = _lab.B;
-        }
+            rgb[0] = color.R / 255.0f;
+            rgb[1] = color.G / 255.0f;
+            rgb[2] = color.B / 255.0f;
 
-        ///<summary>
-        /// Colorへ変換
-        ///</summary>
-        ///<param name="" hsv""="">
-        //////<returns></returns>
-        public Color ToColor()
-        {
-            return ToCIEXyz().ToColor();
-        }
-
-        ///<summary>
-        /// CIEXyzへ変換
-        ///</summary>
-        ///<param name="" hsv""="">
-        //////<returns></returns>
-        public CIEXYZ ToCIEXyz()
-        {
-            double _delta = 6.0 / 29.0;
-            double _fy = (l + 16.0) / 116.0;
-            double _fx = _fy + a / 500.0;
-            double _fz = _fy - b / 200.0;
-
-            double _x, _y, _z;
-
-            if (_fx > _delta)
+            if (rgb[0] > .04045f)
             {
-                _x = Xn * Math.Pow(_fx, 3);
+                rgb[0] = (float)Math.Pow((rgb[0] + .055) / 1.055, 2.4);
             }
             else
             {
-                _x = (_fx - 16.0 / 116.0) * 3 * Math.Pow(_delta, 2);
+                rgb[0] = rgb[0] / 12.92f;
             }
 
-            if (_fy > _delta)
+            if (rgb[1] > .04045f)
             {
-                _y = Yn * Math.Pow(_fy, 3);
+                rgb[1] = (float)Math.Pow((rgb[1] + .055) / 1.055, 2.4);
             }
             else
             {
-                _y = (_fy - 16.0 / 116.0) * 3 * Math.Pow(_delta, 2);
+                rgb[1] = rgb[1] / 12.92f;
             }
 
-            if (_fz > _delta)
+            if (rgb[2] > .04045f)
             {
-                _z = Zn * Math.Pow(_fz, 3);
+                rgb[2] = (float)Math.Pow((rgb[2] + .055) / 1.055, 2.4);
             }
             else
             {
-                _z = (_fz - 16.0 / 116.0) * 3 * Math.Pow(_delta, 2);
+                rgb[2] = rgb[2] / 12.92f;
             }
+            rgb[0] = rgb[0] * 100.0f;
+            rgb[1] = rgb[1] * 100.0f;
+            rgb[2] = rgb[2] * 100.0f;
 
-            return new CIEXYZ(_x, _y, _z);
-        }
 
-        ///<summary>
-        /// CIEXYZからCIELabへ変換
-        ///</summary>
-        public static CIELAB Parse(CIEXYZ xyz)
-        {
-            double _l = 116.0 * Fxyz(xyz.Y / Yn) - 16;
-            double _a = 500.0 * (Fxyz(xyz.X / Xn) - Fxyz(xyz.Y / Yn));
-            double _b = 200.0 * (Fxyz(xyz.Y / Yn) - Fxyz(xyz.Z / Zn));
+            xyz[0] = ((rgb[0] * .412453f) + (rgb[1] * .357580f) + (rgb[2] * .180423f));
+            xyz[1] = ((rgb[0] * .212671f) + (rgb[1] * .715160f) + (rgb[2] * .072169f));
+            xyz[2] = ((rgb[0] * .019334f) + (rgb[1] * .119193f) + (rgb[2] * .950227f));
 
-            CIELAB _result = new CIELAB(_l, _a, _b);
 
-            return _result;
-        }
+            xyz[0] = xyz[0] / 95.047f;
+            xyz[1] = xyz[1] / 100.0f;
+            xyz[2] = xyz[2] / 108.883f;
 
-        ///<summary>
-        /// XYZ to L*a*b* transformation function.
-        ///</summary>
-        private static double Fxyz(double t)
-        {
-            double _result;
-            if (t > 0.008856)
+            if (xyz[0] > .008856f)
             {
-                _result = Math.Pow(t, (1.0 / 3.0));
+                xyz[0] = (float)Math.Pow(xyz[0], (1.0 / 3.0));
             }
             else
             {
-                _result = 7.787 * t + 16.0 / 116.0;
+                xyz[0] = (xyz[0] * 7.787f) + (16.0f / 116.0f);
             }
 
-            return _result;
-        }
+            if (xyz[1] > .008856f)
+            {
+                xyz[1] = (float)Math.Pow(xyz[1], 1.0 / 3.0);
+            }
+            else
+            {
+                xyz[1] = (xyz[1] * 7.787f) + (16.0f / 116.0f);
+            }
 
-        ///<summary>
-        /// CIEXYZからColorへ変換
-        ///</summary>
-        ///<param name="" col""="">
-        //////<returns></returns>
-        public static CIELAB Parse(Color col)
-        {
-            CIEXYZ _xyz = CIEXYZ.Parse(col);
-            return CIELAB.Parse(_xyz);
-        }
+            if (xyz[2] > .008856f)
+            {
+                xyz[2] = (float)Math.Pow(xyz[2], 1.0 / 3.0);
+            }
+            else
+            {
+                xyz[2] = (xyz[2] * 7.787f) + (16.0f / 116.0f);
+            }
 
-        ///<summary>
-        ///文字列に変換
-        ///</summary>
-        ///<returns></returns>
-        public override string ToString()
-        {
-            string _result = string.Format("CIELab [L*={0}, a*={1}, b*={2}", l.ToString("F"), a.ToString("F"), b.ToString("F"));
-            return _result;
+            lab[0] = (116.0f * xyz[1]) - 16.0f;
+            lab[1] = 500.0f * (xyz[0] - xyz[1]);
+            lab[2] = 200.0f * (xyz[1] - xyz[2]);
+
+            return new CIELAB(lab[0], lab[1], lab[2]);
         }
     }
 
-    //
-    //　CIEXYZ構造体
-    //
-    struct CIEXYZ
-    {
-        private double x;
-        private double y;
-        private double z;
-
-        public double X
-        {
-            get { return x; }
-            set { x = value; }
-        }
-
-        public double Y
-        {
-            get { return y; }
-            set { y = value; }
-        }
-
-        public double Z
-        {
-            get { return z; }
-            set { z = value; }
-        }
-
-
-        public CIEXYZ(Double _X, Double _Y, Double _Z)
-        {
-            x = _X;
-            y = _Y;
-            z = _Z;
-        }
-
-        public CIEXYZ(Color rgb)
-        {
-            CIEXYZ _xyz = Parse(rgb);
-
-            x = _xyz.X;
-            y = _xyz.Y;
-            z = _xyz.Z;
-        }
-
-        ///<summary>
-        /// CIELabからCIEXyzへ変換
-        ///</summary>
-        ///<param name="" lab""="">
-        public CIEXYZ(CIELAB Lab)
-        {
-            CIEXYZ _xyz = Lab.ToCIEXyz();
-            x = _xyz.X;
-            y = _xyz.Y;
-            z = _xyz.Z;
-        }
-
-        ///<summary>
-        /// ColorからXYZへ変換
-        ///</summary>
-        ///<param name="" col""="">
-        ///<returns></returns>
-        public static CIEXYZ Parse(Color col)
-        {
-            double _RLinear = col.R / 255d;
-            double _GLinear = col.G / 255d;
-            double _BLinear = col.B / 255d;
-
-            double _r, _g, _b, _x, _y, _z;
-
-            if (_RLinear > 0.04045)
-            {
-                _r = Math.Pow((_RLinear + 0.055) / (1 + 0.055), 2.2);
-            }
-            else
-            {
-                _r = (_RLinear / 12.92);
-            }
-
-            if (_GLinear > 0.04045)
-            {
-                _g = Math.Pow((_GLinear + 0.055) / (1 + 0.055), 2.2);
-            }
-            else
-            {
-                _g = (_GLinear / 12.92);
-            }
-
-            if (_BLinear > 0.04045)
-            {
-                _b = Math.Pow((_BLinear + 0.055) / (1 + 0.055), 2.2);
-            }
-            else
-            {
-                _b = (_BLinear / 12.92);
-            }
-
-            _x = _r * 0.4124 + _g * 0.3576 + _b * 0.1805;
-            _y = _r * 0.2126 + _g * 0.7152 + _b * 0.0722;
-            _z = _r * 0.0193 + _g * 0.1192 + _b * 0.9505;
-            CIEXYZ _result = new CIEXYZ(_x, _y, _z);
-
-            return _result;
-        }
-
-        ///<summary>
-        /// Colorへ変換
-        ///</summary>
-        ///<param name="" xyz""="">
-        ///<returns></returns>
-        public Color ToColor()
-        {
-            double _r = 3.240479 * x - 1.53715 * y - 0.498535 * z;
-            double _g = -0.969256 * x + 1.875991 * y + 0.041556 * z;
-            double _b = 0.055648 * x - 0.204043 * y + 1.057311 * z;
-
-            Color _result = Color.FromArgb(FromLinear(_r), FromLinear(_g), FromLinear(_b));
-            return _result;
-        }
-
-        private static int FromLinear(double v)
-        {
-            int _result;
-
-            if (v <= 0.0031308)
-            {
-                _result = (int)(Clamp(v * 12.92) * 255.0 + 0.5);
-            }
-            else
-            {
-                _result = (int)(Clamp(1.055 * Math.Pow(v, (1.0 / 2.4)) - 0.055) * 255.0 + 0.5);
-            }
-
-            return _result;
-        }
-
-        private static double Clamp(double v)
-        {
-            double _result = v;
-
-            if (v < 0.0)
-            {
-                _result = 0.0;
-            }
-            else if (v > 1.0)
-            {
-                _result = 1.0;
-            }
-
-            return _result;
-        }
-
-        public CIELAB ToCIELab()
-        {
-            CIELAB _result = new CIELAB(new CIEXYZ(x, y, z));
-            return _result;
-        }
-
-        ///<summary>
-        ///文字列に変換
-        ///</summary>
-        ///<returns></returns>
-        public override string ToString()
-        {
-            string _result = string.Format("CIEXyz [X={0}, Y={1}, Z={2}", x.ToString("F"), y.ToString("F"), z.ToString("F"));
-            return _result;
-        }
-    }
 }
