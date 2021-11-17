@@ -11,20 +11,30 @@ namespace Genetic_Algorithm
     class Program
     {
         const string PATH = @"D:\Image\";
+        const string FOLDER_PATH = @"D:\Image\g_{0}";
+        const string IMAGE_PATH = @"D:\Image\g_{0}\{1}.bmp";
+        const string WINNERS_FOLDER_PATH = @"D:\Image\g_{0}\Winners";
+        const string WINNERS_IMAGE_PATH = @"D:\Image\g_{0}\Winners\{1}.bmp";
+
         const int PIXEL_SIZE = 32;
-        static readonly Bitmap seagull = new Bitmap(@"D:\Image\seagull.png");
+        const int WINNERS_COUNT = 4;
+        static readonly Bitmap SEAGULL = new Bitmap(@"D:\Image\seagull.png");
 
         static void Main(string[] args)
         {
-            //CreateRandomImg();
+            CreateRandomImg();
 
-            SelectWinners();
+            for (int i = 0; i < 100; i++)
+            {
+                SelectWinners(i);
+                CreateNewGenarations(i);
+            }
         }
 
         static void CreateRandomImg()
         {
-            var folderName = "g_1";
-            Directory.CreateDirectory(PATH + folderName);
+            var generation = 0;
+            Directory.CreateDirectory(string.Format(FOLDER_PATH, generation));
 
             for (int i = 0; i < 256; i++)
             {
@@ -40,7 +50,7 @@ namespace Genetic_Algorithm
                     }
                 }
 
-                img.Save(PATH + folderName + @"\" + i + ".bmp", ImageFormat.Bmp);
+                img.Save(string.Format(IMAGE_PATH, generation, i));
             }
         }
 
@@ -52,7 +62,7 @@ namespace Genetic_Algorithm
             {
                 for (int y = 0; y < PIXEL_SIZE; y++)
                 {
-                    var lab1 = CIELAB.RGBToLab(seagull.GetPixel(x, y));
+                    var lab1 = CIELAB.RGBToLab(SEAGULL.GetPixel(x, y));
                     var lab2 = CIELAB.RGBToLab(img.GetPixel(x, y));
                     var ciede = new CIEDE2000(lab1.L, lab1.A, lab1.B);
                     score += ciede.DE00(lab2.L, lab2.A, lab2.B);
@@ -62,7 +72,7 @@ namespace Genetic_Algorithm
             return score;
         }
 
-        static void SelectWinners()
+        static void SelectWinners(int generation)
         {
             //★
             var isFirst = true;
@@ -71,8 +81,6 @@ namespace Genetic_Algorithm
             Queue<int> queWinners = new Queue<int>();
             for (int i = 0; i < 256; i++) que.Enqueue(i);
 
-            var folderName = "g_1";
-
             while (que.Count != 4)
             {
                 while (que.Any())
@@ -80,8 +88,8 @@ namespace Genetic_Algorithm
                     var num1 = que.Dequeue();
                     var num2 = que.Dequeue();
 
-                    var score1 = GetScore(new Bitmap(PATH + folderName + @"\" + num1 + ".bmp"));
-                    var score2 = GetScore(new Bitmap(PATH + folderName + @"\" + num2 + ".bmp"));
+                    var score1 = GetScore(new Bitmap(string.Format(IMAGE_PATH, generation, num1)));
+                    var score2 = GetScore(new Bitmap(string.Format(IMAGE_PATH, generation, num2)));
 
                     //★
                     if (isFirst)
@@ -109,11 +117,54 @@ namespace Genetic_Algorithm
             }
 
 
-            //★
-            foreach (var item in que)
+            Directory.CreateDirectory(string.Format(WINNERS_FOLDER_PATH, generation));
+            foreach (var num in que)
             {
-                Console.WriteLine(item);
+                File.Copy(string.Format(IMAGE_PATH, generation, num), string.Format(WINNERS_IMAGE_PATH, generation, num));
             }
+
+        }
+
+        static void CreateNewGenarations(int oldGeneration)
+        {
+            //1つ前の世代の、残った4枚を取得
+            var images = new List<Bitmap>();
+            foreach (var path in Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, oldGeneration), "*"))
+            {
+                images.Add(new Bitmap(path));
+            }
+
+            var generation = oldGeneration + 1;
+            Directory.CreateDirectory(string.Format(FOLDER_PATH, generation));
+
+            for (int i = 0; i < 256; i++)
+            {
+                Bitmap img = new Bitmap(PIXEL_SIZE, PIXEL_SIZE);
+
+                for (int x = 0; x < img.Width; x++)
+                {
+                    for (int y = 0; y < img.Height; y++)
+                    {
+                        img.SetPixel(x, y, CreateColor(images, x, y));
+                    }
+                }
+
+                img.Save(string.Format(IMAGE_PATH, generation, i));
+            }
+        }
+
+        static Color CreateColor(List<Bitmap> images, int x, int y)
+        {
+            Random rnd = new Random();
+
+            //1%の確率で突然変異
+            if (rnd.Next(100) < 1)
+            {
+                return Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+            }
+
+            var imageNo = rnd.Next(4);
+            return images[imageNo].GetPixel(x, y);
         }
     }
 }
