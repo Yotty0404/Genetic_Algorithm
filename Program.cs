@@ -17,18 +17,24 @@ namespace Genetic_Algorithm
         const string WINNERS_IMAGE_PATH = @"D:\Image\g_{0}\Winners\{1}.bmp";
 
         const int PIXEL_SIZE = 32;
-        const int WINNERS_COUNT = 4;
-        static readonly Bitmap SEAGULL = new Bitmap(@"D:\Image\seagull.png");
+        const int GENERATIONS_NUM = 500;
+        static readonly Bitmap ORIGINAL_IMAGE = new Bitmap(@"D:\Image\original.png");
 
         static void Main(string[] args)
         {
-            CreateRandomImg();
+            //CreateRandomImg();
+            //SelectWinners(0);
 
-            for (int i = 0; i < 100; i++)
-            {
-                SelectWinners(i);
-                CreateNewGenarations(i);
-            }
+            //for (int i = 1; i <= GENERATIONS_NUM; i++)
+            //{
+            //    CreateNewGenarations(i);
+            //    SelectWinners(i);
+            //}
+
+            var tempPath = @"D:\Image\0_temp";
+
+            ExpandImages(tempPath);
+            CollectWinners(tempPath);
         }
 
         static void CreateRandomImg()
@@ -62,7 +68,7 @@ namespace Genetic_Algorithm
             {
                 for (int y = 0; y < PIXEL_SIZE; y++)
                 {
-                    var lab1 = CIELAB.RGBToLab(SEAGULL.GetPixel(x, y));
+                    var lab1 = CIELAB.RGBToLab(ORIGINAL_IMAGE.GetPixel(x, y));
                     var lab2 = CIELAB.RGBToLab(img.GetPixel(x, y));
                     var ciede = new CIEDE2000(lab1.L, lab1.A, lab1.B);
                     score += ciede.DE00(lab2.L, lab2.A, lab2.B);
@@ -74,13 +80,11 @@ namespace Genetic_Algorithm
 
         static void SelectWinners(int generation)
         {
-            //★
-            var isFirst = true;
-
             Queue<int> que = new Queue<int>();
             Queue<int> queWinners = new Queue<int>();
             for (int i = 0; i < 256; i++) que.Enqueue(i);
 
+            //4枚になるまで選別作業を繰り返す
             while (que.Count != 4)
             {
                 while (que.Any())
@@ -90,14 +94,6 @@ namespace Genetic_Algorithm
 
                     var score1 = GetScore(new Bitmap(string.Format(IMAGE_PATH, generation, num1)));
                     var score2 = GetScore(new Bitmap(string.Format(IMAGE_PATH, generation, num2)));
-
-                    //★
-                    if (isFirst)
-                    {
-                        Console.WriteLine(num1.ToString() + "," + score1.ToString());
-                        Console.WriteLine(num2.ToString() + "," + score2.ToString());
-                    }
-
 
                     if (score1 <= score2)
                     {
@@ -109,13 +105,9 @@ namespace Genetic_Algorithm
                     }
                 }
 
-                //★
-                isFirst = false;
-
                 que = queWinners;
                 queWinners = new Queue<int>();
             }
-
 
             Directory.CreateDirectory(string.Format(WINNERS_FOLDER_PATH, generation));
             foreach (var num in que)
@@ -125,16 +117,15 @@ namespace Genetic_Algorithm
 
         }
 
-        static void CreateNewGenarations(int oldGeneration)
+        static void CreateNewGenarations(int generation)
         {
             //1つ前の世代の、残った4枚を取得
             var images = new List<Bitmap>();
-            foreach (var path in Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, oldGeneration), "*"))
+            foreach (var path in Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, generation - 1), "*"))
             {
                 images.Add(new Bitmap(path));
             }
 
-            var generation = oldGeneration + 1;
             Directory.CreateDirectory(string.Format(FOLDER_PATH, generation));
 
             for (int i = 0; i < 256; i++)
@@ -165,6 +156,40 @@ namespace Genetic_Algorithm
 
             var imageNo = rnd.Next(4);
             return images[imageNo].GetPixel(x, y);
+        }
+
+        /// <summary>
+        /// ドット絵を拡張するメソッド
+        /// </summary>
+        /// <param name="folderPath"></param>
+        static void ExpandImages(string folderPath)
+        {
+            var newFolderPath = folderPath + @"\ex";
+            Directory.CreateDirectory(newFolderPath);
+            foreach (var path in Directory.EnumerateFiles(folderPath, "*"))
+            {
+                var originalImg = new Bitmap(path);
+                var img = new Bitmap(512, 512);
+                var g = Graphics.FromImage(img);
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                g.DrawImage(originalImg, 0, 0, 512, 512);
+                img.Save(Path.Combine(newFolderPath, Path.GetFileName(path)));
+            }
+        }
+
+        /// <summary>
+        /// 10世代ずつ勝者を集めるメソッド
+        /// </summary>
+        /// <param name="folderPath"></param>
+        static void CollectWinners(string folderPath)
+        {
+            for (int i = 0; i <= GENERATIONS_NUM; i += 10)
+            {
+                var path = Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, i), "*").FirstOrDefault();
+
+                File.Copy(path, Path.Combine(folderPath, string.Format("winner_g_{0}.bmp", i)));
+
+            }
         }
     }
 }
