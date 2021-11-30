@@ -17,24 +17,24 @@ namespace Genetic_Algorithm
         const string WINNERS_IMAGE_PATH = @"D:\Image\g_{0}\Winners\{1}.bmp";
 
         const int PIXEL_SIZE = 32;
-        const int GENERATIONS_NUM = 500;
+        const int GENERATIONS_NUM = 300;
         static readonly Bitmap ORIGINAL_IMAGE = new Bitmap(@"D:\Image\original.png");
 
         static void Main(string[] args)
         {
-            //CreateRandomImg();
-            //SelectWinners(0);
+            CreateRandomImg();
+            SelectWinners(0);
 
-            //for (int i = 1; i <= GENERATIONS_NUM; i++)
-            //{
-            //    CreateNewGenarations(i);
-            //    SelectWinners(i);
-            //}
+            for (int i = 1; i <= GENERATIONS_NUM; i++)
+            {
+                CreateNewGenarations(i);
+                SelectWinners(i);
+            }
 
             var tempPath = @"D:\Image\0_temp";
 
-            ExpandImages(tempPath);
             CollectWinners(tempPath);
+            ExpandImages(tempPath);
         }
 
         static void CreateRandomImg()
@@ -45,8 +45,8 @@ namespace Genetic_Algorithm
             for (int i = 0; i < 256; i++)
             {
                 Bitmap img = new Bitmap(PIXEL_SIZE, PIXEL_SIZE);
-
                 Random rnd = new Random();
+
                 for (int x = 0; x < img.Width; x++)
                 {
                     for (int y = 0; y < img.Height; y++)
@@ -85,7 +85,7 @@ namespace Genetic_Algorithm
             for (int i = 0; i < 256; i++) que.Enqueue(i);
 
             //4枚になるまで選別作業を繰り返す
-            while (que.Count != 4)
+            while (que.Count > 4)
             {
                 while (que.Any())
                 {
@@ -172,6 +172,7 @@ namespace Genetic_Algorithm
                 var img = new Bitmap(512, 512);
                 var g = Graphics.FromImage(img);
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                 g.DrawImage(originalImg, 0, 0, 512, 512);
                 img.Save(Path.Combine(newFolderPath, Path.GetFileName(path)));
             }
@@ -183,12 +184,15 @@ namespace Genetic_Algorithm
         /// <param name="folderPath"></param>
         static void CollectWinners(string folderPath)
         {
+            //ファイル名は連番にする
+            var cnt = 0;
+
             for (int i = 0; i <= GENERATIONS_NUM; i += 10)
             {
                 var path = Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, i), "*").FirstOrDefault();
 
-                File.Copy(path, Path.Combine(folderPath, string.Format("winner_g_{0}.bmp", i)));
-
+                File.Copy(path, Path.Combine(folderPath, string.Format("{0}.jpg", cnt)));
+                cnt++;
             }
         }
     }
