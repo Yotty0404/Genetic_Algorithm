@@ -16,7 +16,7 @@ namespace Genetic_Algorithm
         const string WINNERS_FOLDER_PATH = @"D:\Image\g_{0}\Winners";
         const string WINNERS_IMAGE_PATH = @"D:\Image\g_{0}\Winners\{1}.bmp";
 
-        const int PIXEL_SIZE = 32;
+        const int PIXEL_SIZE = 50;
         const int GENERATIONS_NUM = 300;
         static readonly Bitmap ORIGINAL_IMAGE = new Bitmap(@"D:\Image\original.png");
 
@@ -179,20 +179,16 @@ namespace Genetic_Algorithm
         }
 
         /// <summary>
-        /// 10世代ずつ勝者を集めるメソッド
+        /// 各世代1枚ずつ勝者を集めるメソッド
         /// </summary>
         /// <param name="folderPath"></param>
         static void CollectWinners(string folderPath)
         {
-            //ファイル名は連番にする
-            var cnt = 0;
-
-            for (int i = 0; i <= GENERATIONS_NUM; i += 10)
+            for (int i = 0; i <= GENERATIONS_NUM; i++)
             {
                 var path = Directory.EnumerateFiles(string.Format(WINNERS_FOLDER_PATH, i), "*").FirstOrDefault();
 
-                File.Copy(path, Path.Combine(folderPath, string.Format("{0}.jpg", cnt)));
-                cnt++;
+                File.Copy(path, Path.Combine(folderPath, string.Format("{0}.jpg", i)));
             }
         }
     }
