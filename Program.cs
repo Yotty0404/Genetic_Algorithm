@@ -17,7 +17,7 @@ namespace Genetic_Algorithm
         const string WINNERS_IMAGE_PATH = @"D:\Image\g_{0}\Winners\{1}.bmp";
 
         const int PIXEL_SIZE = 50;
-        const int GENERATIONS_NUM = 300;
+        const int GENERATIONS_NUM = 500;
         static readonly Bitmap ORIGINAL_IMAGE = new Bitmap(@"D:\Image\original.png");
 
         static void Main(string[] args)
